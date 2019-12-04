@@ -3,7 +3,7 @@ import os
 import windowmatching as wm
 import dynamicprogramming as dp
 import graphcuts as gc
-import utils
+# import utils
 from time import perf_counter
 # I/O directories
 INPUT_DIR = "input"
@@ -45,7 +45,6 @@ def graphCut(imL, imR, dispSize=16):
 if __name__ == '__main__':
     imL = cv2.imread(os.path.join(INPUT_DIR, "imL.png"))
     imR = cv2.imread(os.path.join(INPUT_DIR, "imR.png"))
-
     assert imL.shape == imR.shape, "image dimensions don't match"
 
     # times based on 384x288 Tsukuba image
