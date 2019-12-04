@@ -1,6 +1,12 @@
 import numpy as np
+import cv2
+import os 
+import windowmatching as wm
+import dynamicprogramming as dp
+import graphcuts as gc
 
 INPUT_DIR = "input"
+OUTPUT_DIR = "output"
 
 def subPixel(im):
     left = np.copy(im).astype(float)
@@ -37,39 +43,45 @@ def forbid01(g, n1, n2, OCCLUDED):
     g.add_edge(n1, n2, OCCLUDED, 0)
 
 
-def video(imDir):
-    frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+def video(shape, method):
 
-    writer = cv2.VideoWriter("output/out.mp4", cv2.VideoWriter_fourcc(*'MP4V'), 30.0, (frameWidth,frameHeight))
+    pathL = os.path.join(INPUT_DIR, "cropped", "left")
+    pathR = os.path.join(INPUT_DIR, "cropped", "right")
+    output = os.path.join(OUTPUT_DIR, "drive_"+method+".avi")
+
+    filesL = [f for f in os.listdir(pathL) if os.path.isfile(os.path.join(pathL, f))]
+    filesR = [f for f in os.listdir(pathR) if os.path.isfile(os.path.join(pathR, f))]
+    fps = 25
     
-    frameCounter = 1
-    while(True):
-        ret, frame = cap.read()
-        if ret == True:
-            print(frameCounter)
+    filesL.sort(key = lambda x: int(x[5:-4]))
+    filesR.sort(key = lambda x: int(x[5:-4]))
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) / 255
-            gray = cv2.GaussianBlur(gray,(3,3),1)
-            
-            u, v = ps4.hierarchical_lk(prev, gray, levels, k_size, k_type, 
-                                        sigma, interpolation, border_mode)
-                                        
-            mask = quiver(u, v, scale=1, stride=13, color=(255,0,0))[:,:,0]
-            frame[mask > 0] = (0,0,255)
-        
-            writer.write(frame)
+    filesL = filesL[:100]
+    filesR = filesR[:100]
 
-            if frameCounter == 1:
-                cv2.imwrite(os.path.join(output_dir, "ps4-6-a-1.png"), frame)
-            elif frameCounter == 2:
-                cv2.imwrite(os.path.join(output_dir, "ps4-6-a-2.png"), frame)
+    if method == "wm":
+        getFrame = wm.windowMatchingGray
+    elif method == "dp":
+        getFrame = dp.DP
+    elif method == "gc":
+        getFrame = gc.start
 
-            prev = gray
-            frameCounter += 1
-        else: 
-            break
-        
-    # When everything done, release the video capture object
-    cap.release()
+    writer = cv2.VideoWriter(output,cv2.VideoWriter_fourcc(*'DIVX'), fps, (shape[0], shape[1]))
+    for i, (l, r) in enumerate(zip(filesL,filesR)):
+        filenameL=os.path.join(pathL, l)
+        filenameR=os.path.join(pathR, r)
+
+        #reading each files
+        imL= cv2.imread(filenameL)
+        imR = cv2.imread(filenameR)
+
+        disparity = getFrame(imL,imR)
+        disparity = cv2.applyColorMap(disparity, cv2.COLORMAP_PARULA)
+        #inserting the frames into an image array
+        writer.write(disparity)
+
+        if i %10 ==0:
+            print(100*i/len(filesL))
+
     writer.release()
+ 
