@@ -63,7 +63,9 @@ def multiCPUHelper(filenameL,filenameR, i, scale):
     im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
     im[occluded] = np.array([0,0,0])
     
-    cv2.imwrite(os.path.join(OUTPUT_DIR, "drive",(str(i)+".png").zfill(7)), im)
+    outputName = "drive",(str(i)+".png").zfill(7)
+    cv2.imwrite(os.path.join(OUTPUT_DIR, outputName), im)
+    print("done with "+outputName)
     
 
 def video(scale, method):
@@ -92,7 +94,7 @@ def video(scale, method):
             filenameL=os.path.join(pathL, l)
             filenameR=os.path.join(pathR, r)
 
-            pool.apply(multiCPUHelper, (filenameL, filenameR, i, scale))
+            pool.apply_async(multiCPUHelper, (filenameL, filenameR, i, scale))
         pool.close()
         pool.join()
         return
