@@ -1,3 +1,13 @@
+"""
+    Modelled after Kolmogorov and Zabih’s Graph Cuts Stereo Matching Algorithm 
+        http://www.ipol.im/pub/art/2014/97/?utm_source=doi
+
+    C++ source code here: 
+        http://www.ipol.im/pub/art/2014/97/kz2_1.0.tar.gz
+
+    Manuscript here:
+        http://www.ipol.im/pub/art/2014/97/article_lr.pdf
+"""
 import cv2
 import numpy as np
 import multiprocessing as mp
