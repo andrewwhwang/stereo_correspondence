@@ -27,8 +27,8 @@ def dynamicProgramming(imL, imR):
     imR = cv2.cvtColor(imR, cv2.COLOR_BGR2GRAY)
 
     # blurring will help alignment
-    imL = cv2.bilateralFilter(imL, 3, 20, 20)
-    imR = cv2.bilateralFilter(imR, 3, 20, 20)
+    imL = cv2.bilateralFilter(imL, 15, 40, 20)
+    imR = cv2.bilateralFilter(imR, 15, 40, 20)
 
     disparity = dp.DP(imL, imR)
     disparity = cv2.applyColorMap(disparity, cv2.COLORMAP_PARULA)
@@ -45,10 +45,10 @@ def graphCut(imL, imR, dispSize=16):
 if __name__ == '__main__':
     imL = cv2.imread(os.path.join(INPUT_DIR, "imL.png"))
     imR = cv2.imread(os.path.join(INPUT_DIR, "imR.png"))
-    # imL = cv2.imread(os.path.join(INPUT_DIR, "driveL_cropped.png"))
-    # imR = cv2.imread(os.path.join(INPUT_DIR, "driveR_cropped.png"))
-    # imL = cv2.resize(imL, (0,0), fx=.5, fy=.5)
-    # imR = cv2.resize(imR, (0,0), fx=.5, fy=.5)
+    # imL = cv2.imread(os.path.join(INPUT_DIR, "pipesL.png"))
+    # imR = cv2.imread(os.path.join(INPUT_DIR, "pipesR.png"))
+    # imL = cv2.resize(imL, (0,0), fx=.1, fy=.1)
+    # imR = cv2.resize(imR, (0,0), fx=.1, fy=.1)
     assert imL.shape == imR.shape, "image dimensions don't match"
 
     # times based on 384x288 Tsukuba image
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     # ~0.75 secs - greyscale
     # ~1.2 secs - color
     start = perf_counter()
-    windowMatching(imL, imR, color=False,window=3, thresPercent=0.1)
+    windowMatching(imL, imR, color=False,window=3, thresPercent=0.01)
     print("Window Matching took: ", perf_counter() - start, "seconds")
 
     # ~12 secs
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     graphCut(imL, imR,  dispSize=16)
     print("Graph Cuts took: ", perf_counter() - start, "seconds")
     
-    # utils.video(.5, "wm")
+    # utils.video(.75, "wm")

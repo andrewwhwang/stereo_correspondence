@@ -57,12 +57,14 @@ def multiCPUHelper(filenameL,filenameR, i, scale, dispSize):
     # im = np.full(imL.shape, -1)
     occluded = disparity == 1<<30
     im[np.logical_not(occluded)] = disparity[np.logical_not(occluded)] * 255/dispSize
+    # im[np.logical_not(occluded)] = disparity[np.logical_not(occluded)] * 255/np.max(disparity[np.logical_not(occluded)])
 
     im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
     im[occluded] = np.array([0,0,0])
     
     outputName = os.path.join(OUTPUT_DIR, "drive",(str(i)+".png").zfill(7))
     cv2.imwrite(outputName, im)
+    print(outputName)
 
 def video(scale, method):
     pathL = os.path.join(INPUT_DIR, "cropped", "left")
@@ -75,15 +77,15 @@ def video(scale, method):
     filesL.sort(key = lambda x: int(x[5:-4]))
     filesR.sort(key = lambda x: int(x[5:-4]))
 
-    filesL = filesL[:20]
-    filesR = filesR[:20]
+    # filesL = filesL[:20]
+    # filesR = filesR[:20]
 
     if method == "wm":
         getFrame = wm.windowMatchingGray
     elif method == "dp":
         getFrame = dp.DP
     elif method == "gc":
-        dispSize = 16
+        dispSize = 17
         cpus = max(1, mp.cpu_count()-1)
         pool = mp.Pool(processes=cpus)
         for i, (l, r) in enumerate(zip(filesL,filesR)):
@@ -106,6 +108,9 @@ def video(scale, method):
         
         imL = cv2.resize(imL, (0,0), fx=scale, fy=scale)
         imR = cv2.resize(imR, (0,0), fx=scale, fy=scale)
+        # imL = cv2.bilateralFilter(imL, 15, 40, 20)
+        # imR = cv2.bilateralFilter(imR, 15, 40, 20)
+
 
         
         # imL = cv2.bilateralFilter(imL, 3, 20, 20)
