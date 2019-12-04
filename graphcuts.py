@@ -230,7 +230,7 @@ def helper(imL, imR):
     disparity = g.mainLoop()
     return disparity
 
-def start(imL, imR, dispSize=16):
+def start(imR, imL, dispSize=16):
     cpus = max(1, mp.cpu_count()-1)
     leftSections = np.array_split(imL, cpus)
     rightSections = np.array_split(imR, cpus)
@@ -239,7 +239,11 @@ def start(imL, imR, dispSize=16):
         disparity = pool.starmap(helper, zip(leftSections,rightSections))
     disparity = np.vstack(disparity)
 
-    dispSize = dispSize
     im = np.zeros(imL.shape, dtype=np.uint8)
-    im[disparity != 1<<30] = disparity[disparity != 1<<30] * 255/dispSize
+    # im = np.full(imL.shape, -1)
+    occluded = disparity == 1<<30
+    im[np.logical_not(occluded)] = disparity[np.logical_not(occluded)] * 255/dispSize
+
+    im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
+    im[occluded] = np.array([0,0,0])
     return im
