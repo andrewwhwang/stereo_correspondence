@@ -4,8 +4,8 @@ import multiprocessing as mp
 import maxflow
 import heapq
 import utils
-
 np.seterr(over='ignore')
+
 VAR_ALPHA = -1
 VAR_ABSENT = -2
 CUTOFF = 30
@@ -170,8 +170,6 @@ class GraphCut:
                         elif varsA2 != VAR_ALPHA:
                             g.add_tedge(varsA2, 0, delta)
 
-
-############################change#######################################
     def addUniqueTerms(self, g, label):
         for coordL, _ in np.ndenumerate(self.imL):
             if self.vars0[coordL] >= 0:
@@ -187,7 +185,6 @@ class GraphCut:
                     utils.forbid01(g, self.vars0[coordL], varA, self.occ.OCCLUDED)
 
     def mainLoop(self):
-
         dispSize = self.alphaRange + 1
         self.energy = 0
 
@@ -242,10 +239,10 @@ def start(imL, imR, dispSize=16, cpus=-1):
     disparity = np.vstack(disparity)
 
     im = np.zeros(imL.shape, dtype=np.uint8)
-    # im = np.full(imL.shape, -1)
     occluded = disparity == 1<<30
     im[np.logical_not(occluded)] = disparity[np.logical_not(occluded)] * 255/dispSize
 
     im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
     im[occluded] = np.array([0,0,0])
     return im
+
