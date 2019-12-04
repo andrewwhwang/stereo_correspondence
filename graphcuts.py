@@ -225,13 +225,13 @@ class GraphCut:
             self.disparity[varsASegments == 1] = label
 
 
-def helper(imL, imR):
+#imR and imL swapped cause i messed up
+def helper(imR, imL):
     g = GraphCut(imL, imR)
     disparity = g.mainLoop()
     return disparity
 
-#imR and imL swapped cause i messed up
-def start(imR, imL, dispSize=16, cpus=-1):
+def start(imL, imR, dispSize=16, cpus=-1):
     if cpus <= 0:
         cpus = max(1, mp.cpu_count()-1)
     leftSections = np.array_split(imL, cpus)

@@ -44,16 +44,14 @@ def forbid01(g, n1, n2, OCCLUDED):
     g.add_edge(n1, n2, OCCLUDED, 0)
 
 
-def multiCPUHelper(filenameL,filenameR, i, scale):
+def multiCPUHelper(filenameL,filenameR, i, scale, dispSize):
     imL= cv2.imread(filenameL, cv2.IMREAD_GRAYSCALE)
     imR = cv2.imread(filenameR, cv2.IMREAD_GRAYSCALE)
     
     imL = cv2.resize(imL, (0,0), fx=scale, fy=scale)
     imR = cv2.resize(imR, (0,0), fx=scale, fy=scale)
 
-    g = gc.GraphCut(imL, imR)
-    disparity = g.mainLoop()
-    disparity = gc.start(imL, imR, cpus=1)
+    disparity = gc.helper(imL, imR)
 
     im = np.zeros(imL.shape, dtype=np.uint8)
     # im = np.full(imL.shape, -1)
@@ -63,10 +61,8 @@ def multiCPUHelper(filenameL,filenameR, i, scale):
     im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
     im[occluded] = np.array([0,0,0])
     
-    outputName = "drive",(str(i)+".png").zfill(7)
-    cv2.imwrite(os.path.join(OUTPUT_DIR, outputName), im)
-    print("done with "+outputName)
-    
+    outputName = os.path.join(OUTPUT_DIR, "drive",(str(i)+".png").zfill(7))
+    cv2.imwrite(outputName, im)
 
 def video(scale, method):
     pathL = os.path.join(INPUT_DIR, "cropped", "left")
@@ -75,28 +71,29 @@ def video(scale, method):
 
     filesL = [f for f in os.listdir(pathL) if os.path.isfile(os.path.join(pathL, f))]
     filesR = [f for f in os.listdir(pathR) if os.path.isfile(os.path.join(pathR, f))]
-    fps = 25
     
     filesL.sort(key = lambda x: int(x[5:-4]))
     filesR.sort(key = lambda x: int(x[5:-4]))
 
-    # filesLZipped = zip(filesL,list(range(len(filesL))))
-    # filesRZipped = zip(filesR,list(range(len(filesR))))
+    filesL = filesL[:20]
+    filesR = filesR[:20]
 
     if method == "wm":
         getFrame = wm.windowMatchingGray
     elif method == "dp":
         getFrame = dp.DP
     elif method == "gc":
+        dispSize = 16
         cpus = max(1, mp.cpu_count()-1)
         pool = mp.Pool(processes=cpus)
         for i, (l, r) in enumerate(zip(filesL,filesR)):
             filenameL=os.path.join(pathL, l)
             filenameR=os.path.join(pathR, r)
 
-            pool.apply_async(multiCPUHelper, (filenameL, filenameR, i, scale))
+            pool.apply_async(multiCPUHelper, (filenameL, filenameR, i, scale, dispSize))
         pool.close()
         pool.join()
+
         return
 
     for i, (l, r) in enumerate(zip(filesL,filesR)):
