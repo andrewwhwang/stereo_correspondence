@@ -4,6 +4,7 @@ import os
 import windowmatching as wm
 import dynamicprogramming as dp
 import graphcuts as gc
+import multiprocessing as mp
 
 INPUT_DIR = "input"
 OUTPUT_DIR = "output"
@@ -43,8 +44,29 @@ def forbid01(g, n1, n2, OCCLUDED):
     g.add_edge(n1, n2, OCCLUDED, 0)
 
 
-def video(scale, method):
+def multiCPUHelper(filenameL,filenameR, i, scale):
+    imL= cv2.imread(filenameL, cv2.IMREAD_GRAYSCALE)
+    imR = cv2.imread(filenameR, cv2.IMREAD_GRAYSCALE)
+    
+    imL = cv2.resize(imL, (0,0), fx=scale, fy=scale)
+    imR = cv2.resize(imR, (0,0), fx=scale, fy=scale)
 
+    g = gc.GraphCut(imL, imR)
+    disparity = g.mainLoop()
+    disparity = gc.start(imL, imR, cpus=1)
+
+    im = np.zeros(imL.shape, dtype=np.uint8)
+    # im = np.full(imL.shape, -1)
+    occluded = disparity == 1<<30
+    im[np.logical_not(occluded)] = disparity[np.logical_not(occluded)] * 255/dispSize
+
+    im = cv2.applyColorMap(im, cv2.COLORMAP_PARULA)
+    im[occluded] = np.array([0,0,0])
+    
+    cv2.imwrite(os.path.join(OUTPUT_DIR, "drive",(str(i)+".png").zfill(7)), im)
+    
+
+def video(scale, method):
     pathL = os.path.join(INPUT_DIR, "cropped", "left")
     pathR = os.path.join(INPUT_DIR, "cropped", "right")
     # output = os.path.join(OUTPUT_DIR, "drive_"+method+".avi")
@@ -56,15 +78,24 @@ def video(scale, method):
     filesL.sort(key = lambda x: int(x[5:-4]))
     filesR.sort(key = lambda x: int(x[5:-4]))
 
-    # filesL = filesL[:10]
-    # filesR = filesR[:10]
+    # filesLZipped = zip(filesL,list(range(len(filesL))))
+    # filesRZipped = zip(filesR,list(range(len(filesR))))
 
     if method == "wm":
         getFrame = wm.windowMatchingGray
     elif method == "dp":
         getFrame = dp.DP
     elif method == "gc":
-        getFrame = gc.start
+        cpus = max(1, mp.cpu_count()-1)
+        pool = mp.Pool(processes=cpus)
+        for i, (l, r) in enumerate(zip(filesL,filesR)):
+            filenameL=os.path.join(pathL, l)
+            filenameR=os.path.join(pathR, r)
+
+            pool.apply(multiCPUHelper, (filenameL, filenameR, i, scale))
+        pool.close()
+        pool.join()
+        return
 
     for i, (l, r) in enumerate(zip(filesL,filesR)):
         filenameL=os.path.join(pathL, l)
@@ -77,6 +108,9 @@ def video(scale, method):
         imL = cv2.resize(imL, (0,0), fx=scale, fy=scale)
         imR = cv2.resize(imR, (0,0), fx=scale, fy=scale)
 
+        
+        # imL = cv2.bilateralFilter(imL, 3, 20, 20)
+        # imR = cv2.bilateralFilter(imR, 3, 20, 20)
 
         disparity = getFrame(imL,imR)
         disparity = cv2.applyColorMap(disparity, cv2.COLORMAP_PARULA)

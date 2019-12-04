@@ -230,8 +230,10 @@ def helper(imL, imR):
     disparity = g.mainLoop()
     return disparity
 
-def start(imR, imL, dispSize=16):
-    cpus = max(1, mp.cpu_count()-1)
+#imR and imL swapped cause i messed up
+def start(imR, imL, dispSize=16, cpus=-1):
+    if cpus <= 0:
+        cpus = max(1, mp.cpu_count()-1)
     leftSections = np.array_split(imL, cpus)
     rightSections = np.array_split(imR, cpus)
 
