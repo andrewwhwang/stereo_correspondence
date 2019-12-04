@@ -43,11 +43,11 @@ def forbid01(g, n1, n2, OCCLUDED):
     g.add_edge(n1, n2, OCCLUDED, 0)
 
 
-def video(shape, method):
+def video(scale, method):
 
     pathL = os.path.join(INPUT_DIR, "cropped", "left")
     pathR = os.path.join(INPUT_DIR, "cropped", "right")
-    output = os.path.join(OUTPUT_DIR, "drive_"+method+".avi")
+    # output = os.path.join(OUTPUT_DIR, "drive_"+method+".avi")
 
     filesL = [f for f in os.listdir(pathL) if os.path.isfile(os.path.join(pathL, f))]
     filesR = [f for f in os.listdir(pathR) if os.path.isfile(os.path.join(pathR, f))]
@@ -56,8 +56,8 @@ def video(shape, method):
     filesL.sort(key = lambda x: int(x[5:-4]))
     filesR.sort(key = lambda x: int(x[5:-4]))
 
-    filesL = filesL[:100]
-    filesR = filesR[:100]
+    # filesL = filesL[:10]
+    # filesR = filesR[:10]
 
     if method == "wm":
         getFrame = wm.windowMatchingGray
@@ -66,22 +66,25 @@ def video(shape, method):
     elif method == "gc":
         getFrame = gc.start
 
-    writer = cv2.VideoWriter(output,cv2.VideoWriter_fourcc(*'DIVX'), fps, (shape[0], shape[1]))
     for i, (l, r) in enumerate(zip(filesL,filesR)):
         filenameL=os.path.join(pathL, l)
         filenameR=os.path.join(pathR, r)
 
         #reading each files
-        imL= cv2.imread(filenameL)
-        imR = cv2.imread(filenameR)
+        imL= cv2.imread(filenameL, cv2.IMREAD_GRAYSCALE)
+        imR = cv2.imread(filenameR, cv2.IMREAD_GRAYSCALE)
+        
+        imL = cv2.resize(imL, (0,0), fx=scale, fy=scale)
+        imR = cv2.resize(imR, (0,0), fx=scale, fy=scale)
+
 
         disparity = getFrame(imL,imR)
         disparity = cv2.applyColorMap(disparity, cv2.COLORMAP_PARULA)
         #inserting the frames into an image array
-        writer.write(disparity)
+        
+        cv2.imwrite(os.path.join(OUTPUT_DIR, "drive",(str(i)+".png").zfill(7)), disparity)
 
         if i %10 ==0:
             print(100*i/len(filesL))
 
-    writer.release()
  
