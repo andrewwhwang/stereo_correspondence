@@ -8,7 +8,8 @@ Stereo Correspondence using three methods:
  ![GT](./input/groundtruth.png)    ![GT](./output/window_matching.png)  
  ![GT](./output/dynamic_programming.png)    ![GT](./output/graph_cuts.png)  
 
-youtube link here
+## Video Presentation 
+https://youtu.be/wP5ytz9VQ40
 
 ## Dependencies
 * Python 3
